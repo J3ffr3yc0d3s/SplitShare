@@ -13,6 +13,9 @@ export const useExpenses = () => {
   return useQuery({
     queryKey: queryKeys.expenses.list(),
     queryFn: () => expenseService.getExpenses().then((res) => res.data),
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -20,8 +23,11 @@ export const useExpenseById = (id: string) => {
   return useQuery({
     queryKey: queryKeys.expenses.detail(id),
     queryFn: () => expenseService.getExpenseById(id).then((res) => res.data),
+    refetchOnWindowFocus: false,
   })
 }
+
+export const useExpense = useExpenseById
 
 export const useCreateExpense = () => {
   const queryClient = useQueryClient()
@@ -61,6 +67,9 @@ export const useFriends = () => {
   return useQuery({
     queryKey: queryKeys.friends.list(),
     queryFn: () => friendService.getFriends().then((res) => res.data),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -90,6 +99,9 @@ export const useBalances = () => {
   return useQuery({
     queryKey: queryKeys.balances.list(),
     queryFn: () => balanceService.getBalances().then((res) => res.data),
+    staleTime: 1000 * 60 * 1,
+    gcTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -97,6 +109,7 @@ export const useTotalBalance = () => {
   return useQuery({
     queryKey: queryKeys.balances.all,
     queryFn: () => balanceService.calculateTotalBalance().then((res) => res.data),
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -105,6 +118,9 @@ export const useSettlements = () => {
   return useQuery({
     queryKey: queryKeys.settlements.list(),
     queryFn: () => settlementService.getSettlements().then((res) => res.data),
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -125,6 +141,9 @@ export const useActivity = (page: number = 1, pageSize: number = 20) => {
   return useQuery({
     queryKey: queryKeys.activity.list({ page, pageSize }),
     queryFn: () => activityService.getActivities(page, pageSize).then((res) => res.data),
+    staleTime: 1000 * 60 * 1,
+    gcTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -133,5 +152,8 @@ export const useDashboardMetrics = () => {
   return useQuery({
     queryKey: queryKeys.dashboard.metrics(),
     queryFn: () => dashboardService.getDashboardMetrics().then((res) => res.data),
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
   })
 }

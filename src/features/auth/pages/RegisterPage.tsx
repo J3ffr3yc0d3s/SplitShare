@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 
@@ -60,43 +59,51 @@ export default function RegisterPage() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Name</label>
-            <Input
+            <label htmlFor="name" className="text-sm font-medium">Name</label>
+            <input
+              id="name"
               type="text"
               placeholder="John Doe"
               value={name}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
               disabled={isLoading}
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Email</label>
-            <Input
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <input
+              id="email"
               type="email"
               placeholder="john@example.com"
               value={email}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               disabled={isLoading}
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Password</label>
-            <Input
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <input
+              id="password"
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               disabled={isLoading}
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Confirm Password</label>
-            <Input
+            <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+            <input
+              id="confirmPassword"
               type="password"
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
               disabled={isLoading}
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>

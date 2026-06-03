@@ -17,6 +17,7 @@ const NotificationsPage = React.lazy(() => import('@/features/notifications/page
 // Expense Pages
 const ExpensesPage = React.lazy(() => import('@/features/expenses/pages/ExpensesPage'))
 const ExpenseDetailPage = React.lazy(() => import('@/features/expenses/pages/ExpenseDetailPage'))
+const CreateExpensePage = React.lazy(() => import('@/features/expenses/pages/CreateExpensePage'))
 
 // Friend Pages
 const FriendsPage = React.lazy(() => import('@/features/friends/pages/FriendsPage'))
@@ -92,6 +93,10 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <ExpensesPage />,
+          },
+          {
+            path: 'new',
+            element: <CreateExpensePage />,
           },
           {
             path: ':id',

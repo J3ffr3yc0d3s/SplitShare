@@ -9,16 +9,16 @@ interface UIStore {
 }
 
 const getInitialTheme = (): Theme => {
-  if (typeof window === 'undefined') {
-    return 'light'
+  if (typeof window === 'undefined') return 'light'
+
+  const stored = localStorage.getItem('theme')
+  if (stored === 'light' || stored === 'dark') return stored
+
+  if (typeof window.matchMedia === 'function') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   }
 
-  const storedTheme = localStorage.getItem('theme')
-  if (storedTheme === 'light' || storedTheme === 'dark') {
-    return storedTheme
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'light'
 }
 
 export const useUIStore = create<UIStore>((set, get) => ({

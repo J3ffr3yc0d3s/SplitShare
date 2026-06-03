@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   LayoutDashboard,
   Receipt,
@@ -12,6 +13,10 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/authStore'
+import { queryKeys } from '@/lib/queryKeys'
+import { dashboardService } from '@/services/api/dashboardService'
+import { expenseService } from '@/services/api/expenseService'
+import { balanceService } from '@/services/api/balanceService'
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -26,11 +31,37 @@ const navItems = [
 export default function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user, logout } = useAuthStore()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const handlePrefetch = (path: string) => {
+    switch (path) {
+      case '/dashboard':
+        return () =>
+          queryClient.prefetchQuery({
+            queryKey: queryKeys.dashboard.metrics(),
+            queryFn: () => dashboardService.getDashboardMetrics().then((res) => res.data),
+          })
+      case '/expenses':
+        return () =>
+          queryClient.prefetchQuery({
+            queryKey: queryKeys.expenses.lists(),
+            queryFn: () => expenseService.getExpenses().then((res) => res.data),
+          })
+      case '/balances':
+        return () =>
+          queryClient.prefetchQuery({
+            queryKey: queryKeys.balances.all,
+            queryFn: () => balanceService.calculateTotalBalance().then((res) => res.data),
+          })
+      default:
+        return undefined
+    }
   }
 
   return (
@@ -48,6 +79,7 @@ export default function Sidebar() {
               key={item.path}
               type="button"
               onClick={() => navigate(item.path)}
+              onMouseEnter={handlePrefetch(item.path)}
               className={cn(
                 'flex w-full items-center gap-3 rounded-none border-l-4 border-transparent px-3 py-2 text-sm transition-colors duration-150 ease-in-out',
                 isActive
