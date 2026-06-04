@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-Dp58Igxz.js";var t=e();function n(){return(0,t.jsxs)(`div`,{className:`text-center py-12`,children:[(0,t.jsx)(`h1`,{className:`text-2xl font-semibold mb-4`,children:`Notifications`}),(0,t.jsx)(`p`,{className:`text-sm text-muted-foreground`,children:`No notifications yet.`})]})}export{n as default};

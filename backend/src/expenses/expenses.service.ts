@@ -1,7 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { ExpenseParticipantDto } from './dto/expense-participant.dto';
+
+/** Ensures at most one participant row per user and never includes the payer. */
+export function normalizeExpenseParticipants(
+  payerId: string,
+  participants: ExpenseParticipantDto[],
+): ExpenseParticipantDto[] {
+  const seen = new Set<string>();
+  const normalized: ExpenseParticipantDto[] = [];
+
+  for (const participant of participants) {
+    const userId = participant.userId?.trim();
+    if (!userId) continue;
+
+    if (userId === payerId) {
+      throw new BadRequestException('Payer cannot be listed as a participant');
+    }
+
+    if (seen.has(userId)) {
+      continue;
+    }
+
+    seen.add(userId);
+    normalized.push({ ...participant, userId });
+  }
+
+  return normalized;
+}
+
+/** Converts API date strings (e.g. YYYY-MM-DD from HTML inputs) to Date for Prisma DateTime fields. */
+function toExpenseDate(value: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(`${value}T00:00:00.000Z`);
+  }
+  return new Date(value);
+}
 
 @Injectable()
 export class ExpensesService {
@@ -42,18 +78,21 @@ export class ExpensesService {
   }
 
   async create(userId: string, dto: CreateExpenseDto) {
+    console.log('dto.participants', dto.participants);
+    const participants = normalizeExpenseParticipants(userId, dto.participants);
+
     return this.prisma.expenses.create({
       data: {
-        title: dto.description,
+        title: dto.title,
         description: dto.description,
         amount: dto.amount,
         category: dto.category,
         paid_by: userId,
         created_by: userId,
-        expense_date: dto.expenseDate,
+        expense_date: toExpenseDate(dto.expenseDate),
         group_id: dto.groupId,
         expense_participants: {
-          create: dto.participants.map((participant) => ({
+          create: participants.map((participant) => ({
             user_id: participant.userId,
             share_amount: participant.amount,
           })),
@@ -75,12 +114,13 @@ export class ExpensesService {
     if (dto.category !== undefined) data.category = dto.category;
     if (dto.groupId !== undefined) data.group_id = dto.groupId;
     if (dto.currency !== undefined) data.currency = dto.currency;
-    if (dto.expenseDate !== undefined) data.expense_date = dto.expenseDate;
+    if (dto.expenseDate !== undefined) data.expense_date = toExpenseDate(dto.expenseDate);
 
     if (dto.participants !== undefined) {
+      const participants = normalizeExpenseParticipants(userId, dto.participants);
       data.expense_participants = {
         deleteMany: {},
-        create: dto.participants.map((participant) => ({
+        create: participants.map((participant) => ({
           user_id: participant.userId,
           share_amount: participant.amount,
         })),

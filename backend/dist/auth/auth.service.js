@@ -13,50 +13,72 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../prisma/prisma.service");
+const bcryptjs_1 = require("bcryptjs");
 let AuthService = class AuthService {
     constructor(prisma, jwtService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
     }
+    toPublicUser(user) {
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            avatarUrl: user.avatar_url,
+            createdAt: user.created_at,
+        };
+    }
     getJwtToken(user) {
         return {
             accessToken: this.jwtService.sign({
                 sub: user.id,
-                authId: user.auth_id,
                 email: user.email,
             }),
+            user: this.toPublicUser(user),
         };
     }
     async register(dto) {
+        const existingUser = await this.prisma.users.findUnique({
+            where: { email: dto.email },
+        });
+        if (existingUser) {
+            throw new common_1.BadRequestException('Email is already registered');
+        }
+        const passwordHash = await (0, bcryptjs_1.hash)(dto.password, 10);
         const user = await this.prisma.users.create({
             data: {
-                auth_id: dto.authId,
                 email: dto.email,
                 name: dto.name,
+                password_hash: passwordHash,
             },
         });
         return this.getJwtToken(user);
     }
     async login(dto) {
         const user = await this.prisma.users.findUnique({
-            where: { auth_id: dto.authId },
+            where: { email: dto.email },
         });
-        if (!user) {
-            throw new common_1.UnauthorizedException('Invalid credentials');
+        if (!user || !user.password_hash) {
+            throw new common_1.UnauthorizedException('Invalid email or password');
+        }
+        const isPasswordValid = await (0, bcryptjs_1.compare)(dto.password, user.password_hash);
+        if (!isPasswordValid) {
+            throw new common_1.UnauthorizedException('Invalid email or password');
         }
         return this.getJwtToken(user);
     }
     async validateUser(payload) {
         const user = await this.prisma.users.findUnique({
-            where: { auth_id: payload.authId },
+            where: { id: payload.sub },
         });
         if (!user) {
             return null;
         }
         return {
             id: user.id,
-            authId: user.auth_id,
             email: user.email,
+            name: user.name,
+            avatarUrl: user.avatar_url,
         };
     }
     async getMe(userId) {
@@ -64,7 +86,6 @@ let AuthService = class AuthService {
             where: { id: userId },
             select: {
                 id: true,
-                auth_id: true,
                 email: true,
                 name: true,
                 avatar_url: true,

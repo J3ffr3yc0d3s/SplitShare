@@ -132,7 +132,7 @@ export default function DashboardPage() {
                     onClick={() => navigate(`/expenses/${expense.id}`)}
                     className="cursor-pointer border-t border-[var(--border)] hover:bg-[var(--secondary)]/10"
                   >
-                    <td className="px-4 py-4">{expense.description}</td>
+                    <td className="px-4 py-4">{expense.description || expense.title}</td>
                     <td className="px-4 py-4">${expense.amount.toFixed(2)}</td>
                     <td className="px-4 py-4">{expense.paidBy}</td>
                     <td className="px-4 py-4">{new Date(expense.date).toLocaleDateString()}</td>

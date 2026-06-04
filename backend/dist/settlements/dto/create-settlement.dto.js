@@ -15,11 +15,12 @@ class CreateSettlementDto {
 }
 exports.CreateSettlementDto = CreateSettlementDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)('4'),
     __metadata("design:type", String)
 ], CreateSettlementDto.prototype, "to", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.01),
     __metadata("design:type", Number)
 ], CreateSettlementDto.prototype, "amount", void 0);
 __decorate([
@@ -27,9 +28,4 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSettlementDto.prototype, "note", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateSettlementDto.prototype, "status", void 0);
 //# sourceMappingURL=create-settlement.dto.js.map

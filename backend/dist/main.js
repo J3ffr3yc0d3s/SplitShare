@@ -10,8 +10,14 @@ async function bootstrap() {
     const frontendUrl = configService.get('FRONTEND_URL');
     const port = configService.get('PORT') || 3001;
     app.enableCors({
-        origin: frontendUrl,
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            frontendUrl,
+        ].filter((origin) => Boolean(origin)),
         credentials: true,
+        methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
     });
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new common_1.ValidationPipe({

@@ -9,9 +9,10 @@ export interface User {
 
 export interface Expense {
   id: string
+  title: string
   description: string
   amount: number
-  category: 'food' | 'entertainment' | 'transport' | 'utilities' | 'shopping' | 'other'
+  category: 'food' | 'entertainment' | 'transport' | 'utilities' | 'shopping' | 'general' | 'other'
   paidBy: string // user id
   participants: {
     userId: string
@@ -31,6 +32,7 @@ export interface Friend {
   name: string
   avatar?: string
   addedAt: Date
+  status?: 'pending' | 'accepted' | 'rejected' | string
 }
 
 export interface Balance {

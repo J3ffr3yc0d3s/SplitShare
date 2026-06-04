@@ -1,7 +1,4 @@
-export declare class ExpenseParticipantDto {
-    userId: string;
-    amount: number;
-}
+import { ExpenseParticipantDto } from './expense-participant.dto';
 export declare class UpdateExpenseDto {
     description?: string;
     amount?: number;

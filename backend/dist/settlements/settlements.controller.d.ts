@@ -5,33 +5,33 @@ export declare class SettlementsController {
     private readonly settlementsService;
     constructor(settlementsService: SettlementsService);
     getAll(req: any): Promise<{
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
-        group_id: string | null;
         created_at: Date | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        group_id: string | null;
         receiver_id: string;
+        status: string;
         payer_id: string;
         note: string | null;
-        status: string;
     }[]>;
     create(req: any, dto: CreateSettlementDto): Promise<{
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
-        group_id: string | null;
         created_at: Date | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        group_id: string | null;
         receiver_id: string;
+        status: string;
         payer_id: string;
         note: string | null;
-        status: string;
     }>;
     updateStatus(id: string, req: any, dto: UpdateSettlementDto): Promise<{
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
-        group_id: string | null;
         created_at: Date | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        group_id: string | null;
         receiver_id: string;
+        status: string;
         payer_id: string;
         note: string | null;
-        status: string;
     }>;
 }

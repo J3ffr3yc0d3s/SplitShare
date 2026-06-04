@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BalancesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const outstanding_util_1 = require("../common/outstanding.util");
 let BalancesService = class BalancesService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -19,24 +20,20 @@ let BalancesService = class BalancesService {
     aggregateBalances(userId, splits) {
         const balances = new Map();
         splits.forEach((split) => {
+            const signed = (0, outstanding_util_1.getSignedOutstanding)(split, userId);
+            if (signed === 0) {
+                return;
+            }
             const expense = split.expenses;
             const isPayer = expense.paid_by === userId;
-            const isParticipant = split.user_id === userId;
-            if (isPayer && split.user_id === userId) {
-                return;
-            }
             const friendId = isPayer ? split.user_id : expense.paid_by;
             if (!friendId || friendId === userId) {
-                return;
-            }
-            const amount = isPayer ? Number(split.share_amount) : -Number(split.share_amount);
-            if (amount === 0) {
                 return;
             }
             const key = `${userId}-${friendId}`;
             const existing = balances.get(key);
             if (existing) {
-                existing.amount += amount;
+                existing.amount += signed;
                 existing.lastUpdated = new Date();
             }
             else {
@@ -44,28 +41,28 @@ let BalancesService = class BalancesService {
                     id: `balance-${userId}-${friendId}`,
                     userId,
                     friendId,
-                    amount,
+                    amount: signed,
                     lastUpdated: new Date(),
                 });
             }
         });
         return Array.from(balances.values());
     }
-    async getBalances(userId) {
+    async loadUnsettledSplits(userId) {
         const splits = await this.prisma.expense_participants.findMany({
             where: {
-                is_settled: false,
-                OR: [
-                    { user_id: userId },
-                    { expenses: { paid_by: userId } },
-                ],
+                OR: [{ user_id: userId }, { expenses: { paid_by: userId } }],
             },
             include: {
                 expenses: {
-                    select: { paid_by: true },
+                    select: { paid_by: true, expense_date: true },
                 },
             },
         });
+        return splits.filter((split) => (0, outstanding_util_1.getSignedOutstanding)(split, userId) !== 0);
+    }
+    async getBalances(userId) {
+        const splits = await this.loadUnsettledSplits(userId);
         return this.aggregateBalances(userId, splits);
     }
     async getBalanceBetweenUsers(userId, friendId) {

@@ -12,37 +12,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const outstanding_util_1 = require("../common/outstanding.util");
 let DashboardService = class DashboardService {
     constructor(prisma) {
         this.prisma = prisma;
     }
     async getBalanceSplits(userId) {
-        return this.prisma.expense_participants.findMany({
+        const splits = await this.prisma.expense_participants.findMany({
             where: {
-                is_settled: false,
-                OR: [
-                    { user_id: userId },
-                    { expenses: { paid_by: userId } },
-                ],
+                OR: [{ user_id: userId }, { expenses: { paid_by: userId } }],
             },
             include: {
                 expenses: {
-                    select: { paid_by: true },
+                    select: { paid_by: true, expense_date: true },
                 },
             },
         });
+        return splits.filter((split) => (0, outstanding_util_1.getSignedOutstanding)(split, userId) !== 0);
     }
     computeBalanceSummary(userId, splits) {
         let owedToYou = 0;
         let youOwe = 0;
         splits.forEach((split) => {
-            const isPayer = split.expenses.paid_by === userId;
-            const amount = isPayer ? Number(split.share_amount) : -Number(split.share_amount);
-            if (amount > 0) {
-                owedToYou += amount;
+            const signed = (0, outstanding_util_1.getSignedOutstanding)(split, userId);
+            if (signed > 0) {
+                owedToYou += signed;
             }
-            else {
-                youOwe += Math.abs(amount);
+            else if (signed < 0) {
+                youOwe += Math.abs(signed);
             }
         });
         return { owedToYou, youOwe };

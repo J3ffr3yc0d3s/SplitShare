@@ -56,8 +56,8 @@ export default function Sidebar() {
       case '/balances':
         return () =>
           queryClient.prefetchQuery({
-            queryKey: queryKeys.balances.all,
-            queryFn: () => balanceService.calculateTotalBalance().then((res) => res.data),
+            queryKey: queryKeys.balances.list(),
+            queryFn: () => balanceService.getBalances().then((res) => res.data),
           })
       default:
         return undefined

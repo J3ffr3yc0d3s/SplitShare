@@ -9,7 +9,8 @@ export const queryKeys = {
   expenses: {
     all: ['expenses'] as const,
     lists: () => [...queryKeys.expenses.all, 'list'] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.expenses.lists(), filters] as const,
+    list: (filters?: Record<string, any>) =>
+      filters ? ([...queryKeys.expenses.lists(), filters] as const) : queryKeys.expenses.lists(),
     detail: (id: string) => [...queryKeys.expenses.all, 'detail', id] as const,
     byCategory: (category: string) => [...queryKeys.expenses.all, 'category', category] as const,
   },

@@ -15,7 +15,12 @@ class LoginDto {
 }
 exports.LoginDto = LoginDto;
 __decorate([
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], LoginDto.prototype, "authId", void 0);
+], LoginDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(8),
+    __metadata("design:type", String)
+], LoginDto.prototype, "password", void 0);
 //# sourceMappingURL=login.dto.js.map

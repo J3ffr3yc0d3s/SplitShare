@@ -7,37 +7,40 @@ import { toast } from 'sonner'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const setUser = useAuthStore((state) => state.setUser)
-  const setToken = useAuthStore((state) => state.setToken)
 
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
 
     try {
-      // Mock login
-      await new Promise((resolve) => setTimeout(resolve, 600))
-      
-      if (!email || !password) {
-        toast.error('Please enter email and password')
-        return
+      const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
+
+      const res = await fetch(`${BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) {
+        const body = await res.text()
+        throw new Error(body || 'Invalid email or password')
       }
 
-      const mockUser = {
-        id: 'user-1',
-        email,
-        name: email.split('@')[0],
-        createdAt: new Date(),
-      }
+      const data = await res.json()
+      useAuthStore.getState().setToken(data.accessToken)
+      useAuthStore.getState().setUser(data.user)
 
-      setUser(mockUser)
-      setToken(`token-${Date.now()}`)
       toast.success('Login successful!')
       navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.message || 'Login failed')
+      toast.error(err.message || 'Login failed')
     } finally {
       setIsLoading(false)
     }
@@ -77,6 +80,9 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
+          {error ? (
+            <p className="text-sm text-destructive mt-2">{error}</p>
+          ) : null}
         </form>
         <p className="text-center text-sm mt-4 text-muted-foreground">
           Don&apos;t have an account?{' '}

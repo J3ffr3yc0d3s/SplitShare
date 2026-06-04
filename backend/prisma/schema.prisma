@@ -14,8 +14,9 @@ model expense_participants {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   expense_id   String   @db.Uuid
   user_id      String   @db.Uuid
-  share_amount Decimal  @db.Decimal(12, 2)
-  is_settled   Boolean  @default(false)
+  share_amount   Decimal  @db.Decimal(12, 2)
+  settled_amount Decimal  @default(0) @db.Decimal(12, 2)
+  is_settled     Boolean  @default(false)
   expenses     expenses @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -111,9 +112,9 @@ model settlements {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model users {
   id                                                 String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  auth_id                                            String                 @unique @db.Uuid
   name                                               String                 @db.VarChar(100)
   email                                              String                 @unique @db.Citext
+  password_hash                                      String
   avatar_url                                         String?
   created_at                                         DateTime?              @default(now()) @db.Timestamp(6)
   expense_participants                               expense_participants[]

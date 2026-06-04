@@ -1,14 +1,22 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { compare, hash } from 'bcryptjs';
 
 interface JwtPayload {
   sub: string;
-  authId: string;
   email: string;
 }
+
+type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url: string | null;
+  created_at?: Date | null;
+};
 
 @Injectable()
 export class AuthService {
@@ -17,22 +25,42 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private getJwtToken(user: { id: string; auth_id: string; email: string }) {
+  private toPublicUser(user: AuthUser) {
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatarUrl: user.avatar_url,
+      createdAt: user.created_at,
+    };
+  }
+
+  private getJwtToken(user: AuthUser) {
     return {
       accessToken: this.jwtService.sign({
         sub: user.id,
-        authId: user.auth_id,
         email: user.email,
       }),
+      user: this.toPublicUser(user),
     };
   }
 
   async register(dto: RegisterDto) {
+    const existingUser = await this.prisma.users.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Email is already registered');
+    }
+
+    const passwordHash = await hash(dto.password, 10);
+
     const user = await this.prisma.users.create({
       data: {
-        auth_id: dto.authId,
         email: dto.email,
         name: dto.name,
+        password_hash: passwordHash,
       },
     });
 
@@ -41,11 +69,17 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.prisma.users.findUnique({
-      where: { auth_id: dto.authId },
+      where: { email: dto.email },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (!user || !user.password_hash) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const isPasswordValid = await compare(dto.password, user.password_hash);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     return this.getJwtToken(user);
@@ -53,7 +87,7 @@ export class AuthService {
 
   async validateUser(payload: JwtPayload) {
     const user = await this.prisma.users.findUnique({
-      where: { auth_id: payload.authId },
+      where: { id: payload.sub },
     });
 
     if (!user) {
@@ -62,8 +96,9 @@ export class AuthService {
 
     return {
       id: user.id,
-      authId: user.auth_id,
       email: user.email,
+      name: user.name,
+      avatarUrl: user.avatar_url,
     };
   }
 
@@ -72,7 +107,6 @@ export class AuthService {
       where: { id: userId },
       select: {
         id: true,
-        auth_id: true,
         email: true,
         name: true,
         avatar_url: true,

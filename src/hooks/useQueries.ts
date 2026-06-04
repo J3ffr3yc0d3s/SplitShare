@@ -6,12 +6,12 @@ import { settlementService } from '@/services/api/settlementService'
 import { activityService } from '@/services/api/activityService'
 import { dashboardService } from '@/services/api/dashboardService'
 import { queryKeys } from '@/lib/queryKeys'
-import { Expense, Friend, Settlement, Activity } from '@/types'
+import { Expense, Friend, Activity } from '@/types'
 
 // Expense Queries
 export const useExpenses = () => {
   return useQuery({
-    queryKey: queryKeys.expenses.list(),
+    queryKey: queryKeys.expenses.lists(),
     queryFn: () => expenseService.getExpenses().then((res) => res.data),
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 10,
@@ -35,7 +35,9 @@ export const useCreateExpense = () => {
     mutationFn: (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) =>
       expenseService.createExpense(expense).then((res) => res.data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.metrics() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.balances.all })
     },
   })
 }
@@ -73,11 +75,29 @@ export const useFriends = () => {
   })
 }
 
-export const useAddFriend = () => {
+export const useSendFriendRequest = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ userId, friendData }: { userId: string; friendData: Omit<Friend, 'id' | 'userId' | 'addedAt'> }) =>
-      friendService.addFriend(userId, friendData).then((res) => res.data),
+    mutationFn: (email: string) => friendService.sendFriendRequest(email).then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.friends.all })
+    },
+  })
+}
+
+/** @deprecated Use useSendFriendRequest */
+export const useAddFriend = useSendFriendRequest
+
+export const useUpdateFriendRequest = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string
+      status: 'accepted' | 'rejected' | 'pending'
+    }) => friendService.updateFriendRequest(id, status).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.friends.all })
     },
@@ -127,11 +147,12 @@ export const useSettlements = () => {
 export const useRecordSettlement = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (settlement: Omit<Settlement, 'id' | 'createdAt'>) =>
-      settlementService.recordSettlement(settlement).then((res) => res.data),
+    mutationFn: (input: { to: string; amount: number; note?: string }) =>
+      settlementService.recordSettlement(input).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.settlements.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.balances.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.metrics() })
     },
   })
 }
@@ -140,7 +161,10 @@ export const useRecordSettlement = () => {
 export const useActivity = (page: number = 1, pageSize: number = 20) => {
   return useQuery({
     queryKey: queryKeys.activity.list({ page, pageSize }),
-    queryFn: () => activityService.getActivities(page, pageSize).then((res) => res.data),
+    queryFn: async () => {
+      const res = await activityService.getActivities(page, pageSize)
+      return res.data ?? []
+    },
     staleTime: 1000 * 60 * 1,
     gcTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,

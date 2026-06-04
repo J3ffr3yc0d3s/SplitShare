@@ -1,25 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getSignedOutstanding } from '../common/outstanding.util';
 
 @Injectable()
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async getBalanceSplits(userId: string) {
-    return this.prisma.expense_participants.findMany({
+    const splits = await this.prisma.expense_participants.findMany({
       where: {
-        is_settled: false,
-        OR: [
-          { user_id: userId },
-          { expenses: { paid_by: userId } },
-        ],
+        OR: [{ user_id: userId }, { expenses: { paid_by: userId } }],
       },
       include: {
         expenses: {
-          select: { paid_by: true },
+          select: { paid_by: true, expense_date: true },
         },
       },
     });
+
+    return splits.filter((split) => getSignedOutstanding(split, userId) !== 0);
   }
 
   private computeBalanceSummary(userId: string, splits: Array<any>) {
@@ -27,13 +26,11 @@ export class DashboardService {
     let youOwe = 0;
 
     splits.forEach((split) => {
-      const isPayer = split.expenses.paid_by === userId;
-      const amount = isPayer ? Number(split.share_amount) : -Number(split.share_amount);
-
-      if (amount > 0) {
-        owedToYou += amount;
-      } else {
-        youOwe += Math.abs(amount);
+      const signed = getSignedOutstanding(split, userId);
+      if (signed > 0) {
+        owedToYou += signed;
+      } else if (signed < 0) {
+        youOwe += Math.abs(signed);
       }
     });
 

@@ -21,7 +21,6 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      // Mock validation
       if (!email || !name || !password || !confirmPassword) {
         toast.error('Please fill in all fields')
         return
@@ -32,20 +31,27 @@ export default function RegisterPage() {
         return
       }
 
-      // Mock register
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 
-      const mockUser = {
-        id: `user-${Date.now()}`,
-        email,
-        name,
-        createdAt: new Date(),
+      const res = await fetch(`${BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      })
+
+      if (!res.ok) {
+        const errorBody = await res.text()
+        throw new Error(errorBody || 'Registration failed')
       }
 
-      setUser(mockUser)
-      setToken(`token-${Date.now()}`)
+      const data = await res.json()
+      setToken(data.accessToken)
+      setUser(data.user)
+
       toast.success('Account created successfully!')
       navigate('/dashboard')
+    } catch (err: any) {
+      toast.error(err.message || 'Registration failed')
     } finally {
       setIsLoading(false)
     }

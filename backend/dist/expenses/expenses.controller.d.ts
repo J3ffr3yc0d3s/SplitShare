@@ -7,82 +7,86 @@ export declare class ExpensesController {
     getAll(req: any): Promise<({
         expense_participants: {
             id: string;
-            expense_id: string;
             user_id: string;
+            expense_id: string;
             share_amount: import("@prisma/client/runtime/library").Decimal;
+            settled_amount: import("@prisma/client/runtime/library").Decimal;
             is_settled: boolean;
         }[];
     } & {
-        created_by: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
+        created_at: Date | null;
         title: string;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
         paid_by: string;
         group_id: string | null;
         category: string;
         expense_date: Date;
-        created_at: Date | null;
+        created_by: string;
     })[]>;
     getById(id: string, req: any): Promise<{
         expense_participants: {
             id: string;
-            expense_id: string;
             user_id: string;
+            expense_id: string;
             share_amount: import("@prisma/client/runtime/library").Decimal;
+            settled_amount: import("@prisma/client/runtime/library").Decimal;
             is_settled: boolean;
         }[];
     } & {
-        created_by: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
+        created_at: Date | null;
         title: string;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
         paid_by: string;
         group_id: string | null;
         category: string;
         expense_date: Date;
-        created_at: Date | null;
+        created_by: string;
     }>;
     create(req: any, dto: CreateExpenseDto): Promise<{
         expense_participants: {
             id: string;
-            expense_id: string;
             user_id: string;
+            expense_id: string;
             share_amount: import("@prisma/client/runtime/library").Decimal;
+            settled_amount: import("@prisma/client/runtime/library").Decimal;
             is_settled: boolean;
         }[];
     } & {
-        created_by: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
+        created_at: Date | null;
         title: string;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
         paid_by: string;
         group_id: string | null;
         category: string;
         expense_date: Date;
-        created_at: Date | null;
+        created_by: string;
     }>;
     update(id: string, req: any, dto: UpdateExpenseDto): Promise<{
         expense_participants: {
             id: string;
-            expense_id: string;
             user_id: string;
+            expense_id: string;
             share_amount: import("@prisma/client/runtime/library").Decimal;
+            settled_amount: import("@prisma/client/runtime/library").Decimal;
             is_settled: boolean;
         }[];
     } & {
-        created_by: string;
-        amount: import("@prisma/client/runtime/library").Decimal;
         id: string;
+        created_at: Date | null;
         title: string;
         description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
         paid_by: string;
         group_id: string | null;
         category: string;
         expense_date: Date;
-        created_at: Date | null;
+        created_by: string;
     }>;
     delete(id: string, req: any): Promise<{
         success: boolean;

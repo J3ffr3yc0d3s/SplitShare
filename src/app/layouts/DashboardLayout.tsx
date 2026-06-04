@@ -4,7 +4,6 @@ import { useAuthStore } from '@/stores/authStore'
 import Header from '@/components/shared/Header'
 import Sidebar from '@/components/shared/Sidebar'
 import MobileNav from '@/components/shared/MobileNav'
-import DevPanel from '@/components/shared/DevPanel'
 
 export default function DashboardLayout() {
   const { user, token } = useAuthStore()
@@ -39,7 +38,6 @@ export default function DashboardLayout() {
 
       {/* Mobile Bottom Navigation */}
       <MobileNav />
-      <DevPanel />
     </div>
   )
 }

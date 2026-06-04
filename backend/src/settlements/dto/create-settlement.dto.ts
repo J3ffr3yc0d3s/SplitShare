@@ -1,17 +1,14 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateSettlementDto {
-  @IsString()
+  @IsUUID('4')
   to: string;
 
   @IsNumber()
+  @Min(0.01)
   amount: number;
 
   @IsOptional()
   @IsString()
   note?: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
 }

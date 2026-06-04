@@ -9,26 +9,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateExpenseDto = exports.ExpenseParticipantDto = void 0;
+exports.CreateExpenseDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-class ExpenseParticipantDto {
-}
-exports.ExpenseParticipantDto = ExpenseParticipantDto;
-__decorate([
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], ExpenseParticipantDto.prototype, "userId", void 0);
-__decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], ExpenseParticipantDto.prototype, "amount", void 0);
+const expense_participant_dto_1 = require("./expense-participant.dto");
 class CreateExpenseDto {
 }
 exports.CreateExpenseDto = CreateExpenseDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(1),
+    __metadata("design:type", String)
+], CreateExpenseDto.prototype, "title", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateExpenseDto.prototype, "description", void 0);
 __decorate([
@@ -47,7 +42,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
-    (0, class_transformer_1.Type)(() => ExpenseParticipantDto),
+    (0, class_transformer_1.Type)(() => expense_participant_dto_1.ExpenseParticipantDto),
     __metadata("design:type", Array)
 ], CreateExpenseDto.prototype, "participants", void 0);
 __decorate([

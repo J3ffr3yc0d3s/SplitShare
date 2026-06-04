@@ -3,6 +3,7 @@ export declare class BalancesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     private aggregateBalances;
+    private loadUnsettledSplits;
     getBalances(userId: string): Promise<{
         id: string;
         userId: string;

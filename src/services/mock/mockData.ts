@@ -27,6 +27,7 @@ export const mockUsers: Record<string, User> = {
 export const mockExpenses: Expense[] = [
   {
     id: 'exp-1',
+    title: 'Dinner at Italian Restaurant',
     description: 'Dinner at Italian Restaurant',
     amount: 120,
     category: 'food',
@@ -42,6 +43,7 @@ export const mockExpenses: Expense[] = [
   },
   {
     id: 'exp-2',
+    title: 'Movie tickets',
     description: 'Movie tickets',
     amount: 50,
     category: 'entertainment',
@@ -57,6 +59,7 @@ export const mockExpenses: Expense[] = [
   },
   {
     id: 'exp-3',
+    title: 'Gas for road trip',
     description: 'Gas for road trip',
     amount: 80,
     category: 'transport',

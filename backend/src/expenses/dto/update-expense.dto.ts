@@ -1,13 +1,6 @@
 import { IsArray, IsDateString, IsIn, IsNumber, IsOptional, IsString, MinLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export class ExpenseParticipantDto {
-  @IsString()
-  userId: string;
-
-  @IsNumber()
-  amount: number;
-}
+import { ExpenseParticipantDto } from './expense-participant.dto';
 
 export class UpdateExpenseDto {
   @IsOptional()

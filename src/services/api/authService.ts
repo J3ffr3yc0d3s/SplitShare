@@ -4,16 +4,18 @@ import { mockUsers, delay } from '@/services/mock/mockData'
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 
+interface AuthResponse {
+  accessToken: string
+  user: User
+}
+
 export const authService = {
-  async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
-    if (!USE_MOCK) return apiClient<ApiResponse<{ user: User; token: string }>>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+  async login(email: string, password: string): Promise<AuthResponse> {
+    if (!USE_MOCK) return apiClient<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
     await delay(600)
     
     if (!email || !password) {
-      return {
-        data: null as any,
-        error: 'Email and password are required',
-      }
+      throw new Error('Email and password are required')
     }
 
     let user = Object.values(mockUsers).find((u) => u.email === email)
@@ -27,35 +29,24 @@ export const authService = {
       }
     }
 
-    return {
-      data: {
-        user,
-        token: `token-${Date.now()}`,
-      },
-    }
+    return { user, accessToken: `token-${Date.now()}` }
   },
 
   async register(
     email: string,
     password: string,
     name: string
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
-    if (!USE_MOCK) return apiClient<ApiResponse<{ user: User; token: string }>>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) })
+  ): Promise<AuthResponse> {
+    if (!USE_MOCK) return apiClient<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) })
     await delay(600)
 
     if (!email || !password || !name) {
-      return {
-        data: null as any,
-        error: 'All fields are required',
-      }
+      throw new Error('All fields are required')
     }
 
     const existingUser = Object.values(mockUsers).find((u) => u.email === email)
     if (existingUser) {
-      return {
-        data: null as any,
-        error: 'User already exists',
-      }
+      throw new Error('User already exists')
     }
 
     const newUser: User = {
@@ -65,12 +56,7 @@ export const authService = {
       createdAt: new Date(),
     }
 
-    return {
-      data: {
-        user: newUser,
-        token: `token-${Date.now()}`,
-      },
-    }
+    return { user: newUser, accessToken: `token-${Date.now()}` }
   },
 
   async getMe(token: string): Promise<ApiResponse<User>> {

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettlementsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const outstanding_util_1 = require("../common/outstanding.util");
 let SettlementsService = class SettlementsService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -25,14 +26,54 @@ let SettlementsService = class SettlementsService {
         });
     }
     async create(userId, dto) {
-        return this.prisma.settlements.create({
-            data: {
-                payer_id: userId,
-                receiver_id: dto.to,
-                amount: dto.amount,
-                note: dto.note,
-                status: dto.status ?? 'pending',
-            },
+        if (dto.to === userId) {
+            throw new common_1.BadRequestException('Cannot settle with yourself');
+        }
+        if (dto.amount <= 0) {
+            throw new common_1.BadRequestException('Settlement amount must be greater than 0');
+        }
+        return this.prisma.$transaction(async (tx) => {
+            const splits = await tx.expense_participants.findMany({
+                where: {
+                    user_id: userId,
+                    expenses: { paid_by: dto.to },
+                },
+                include: {
+                    expenses: {
+                        select: { paid_by: true, expense_date: true },
+                    },
+                },
+            });
+            const maxOwed = (0, outstanding_util_1.sumOutstandingOwedByPayer)(splits, userId, dto.to);
+            if (maxOwed <= 0) {
+                throw new common_1.BadRequestException('No outstanding balance to settle with this friend');
+            }
+            if (dto.amount > maxOwed + 0.001) {
+                throw new common_1.BadRequestException(`Settlement amount cannot exceed outstanding balance of ${maxOwed.toFixed(2)}`);
+            }
+            const allocations = (0, outstanding_util_1.allocateSettlementFifo)(splits, userId, dto.to, dto.amount);
+            const applied = (0, outstanding_util_1.sumAllocatedAmount)(allocations);
+            if (applied <= 0) {
+                throw new common_1.BadRequestException('Settlement did not apply to any outstanding shares');
+            }
+            for (const allocation of allocations) {
+                await tx.expense_participants.update({
+                    where: { id: allocation.participantId },
+                    data: {
+                        settled_amount: allocation.newSettledAmount,
+                        is_settled: allocation.fullySettled,
+                    },
+                });
+            }
+            return tx.settlements.create({
+                data: {
+                    payer_id: userId,
+                    receiver_id: dto.to,
+                    amount: dto.amount,
+                    note: dto.note,
+                    status: 'completed',
+                },
+            });
         });
     }
     async updateStatus(id, userId, dto) {
@@ -40,21 +81,10 @@ let SettlementsService = class SettlementsService {
         if (!settlement || (settlement.payer_id !== userId && settlement.receiver_id !== userId)) {
             throw new common_1.NotFoundException('Settlement not found');
         }
-        const updated = await this.prisma.settlements.update({
+        return this.prisma.settlements.update({
             where: { id },
             data: { status: dto.status ?? settlement.status },
         });
-        if (updated.status === 'completed') {
-            await this.prisma.expense_participants.updateMany({
-                where: {
-                    is_settled: false,
-                    user_id: updated.payer_id,
-                    expenses: { paid_by: updated.receiver_id },
-                },
-                data: { is_settled: true },
-            });
-        }
-        return updated;
     }
 };
 exports.SettlementsService = SettlementsService;

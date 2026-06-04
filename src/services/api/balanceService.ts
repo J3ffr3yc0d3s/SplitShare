@@ -1,12 +1,12 @@
 import { Balance, ApiResponse } from '@/types'
-import { apiClient } from '@/lib/apiClient'
+import { apiFetch } from '@/lib/apiClient'
 import { mockBalances, delay } from '@/services/mock/mockData'
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 
 export const balanceService = {
   async getBalances(): Promise<ApiResponse<Balance[]>> {
-    if (!USE_MOCK) return apiClient<ApiResponse<Balance[]>>('/balances')
+    if (!USE_MOCK) return apiFetch<Balance[]>('/balances')
     await delay(300)
     return {
       data: mockBalances,
@@ -17,7 +17,7 @@ export const balanceService = {
     userId: string,
     friendId: string
   ): Promise<ApiResponse<Balance | null>> {
-    if (!USE_MOCK) return apiClient<ApiResponse<Balance | null>>(`/balances?userId=${encodeURIComponent(userId)}&friendId=${encodeURIComponent(friendId)}`)
+    if (!USE_MOCK) return apiFetch<Balance | null>(`/balances?userId=${encodeURIComponent(userId)}&friendId=${encodeURIComponent(friendId)}`)
     await delay(200)
     const balance = mockBalances.find(
       (b) => (b.userId === userId && b.friendId === friendId) ||
@@ -29,7 +29,7 @@ export const balanceService = {
   },
 
   async calculateTotalBalance(): Promise<ApiResponse<{ owedToYou: number; youOwe: number }>> {
-    if (!USE_MOCK) return apiClient<ApiResponse<{ owedToYou: number; youOwe: number }>>('/balances/total')
+    if (!USE_MOCK) return apiFetch<{ owedToYou: number; youOwe: number }>('/balances/total')
     await delay(300)
     let owedToYou = 0
     let youOwe = 0

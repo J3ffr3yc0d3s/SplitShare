@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getSignedOutstanding } from '../common/outstanding.util';
 
 @Injectable()
 export class BalancesService {
@@ -9,21 +10,15 @@ export class BalancesService {
     const balances = new Map<string, { id: string; userId: string; friendId: string; amount: number; lastUpdated: Date }>();
 
     splits.forEach((split) => {
+      const signed = getSignedOutstanding(split, userId);
+      if (signed === 0) {
+        return;
+      }
+
       const expense = split.expenses;
       const isPayer = expense.paid_by === userId;
-      const isParticipant = split.user_id === userId;
-
-      if (isPayer && split.user_id === userId) {
-        return;
-      }
-
       const friendId = isPayer ? split.user_id : expense.paid_by;
       if (!friendId || friendId === userId) {
-        return;
-      }
-
-      const amount = isPayer ? Number(split.share_amount) : -Number(split.share_amount);
-      if (amount === 0) {
         return;
       }
 
@@ -31,14 +26,14 @@ export class BalancesService {
       const existing = balances.get(key);
 
       if (existing) {
-        existing.amount += amount;
+        existing.amount += signed;
         existing.lastUpdated = new Date();
       } else {
         balances.set(key, {
           id: `balance-${userId}-${friendId}`,
           userId,
           friendId,
-          amount,
+          amount: signed,
           lastUpdated: new Date(),
         });
       }
@@ -47,22 +42,23 @@ export class BalancesService {
     return Array.from(balances.values());
   }
 
-  async getBalances(userId: string) {
+  private async loadUnsettledSplits(userId: string) {
     const splits = await this.prisma.expense_participants.findMany({
       where: {
-        is_settled: false,
-        OR: [
-          { user_id: userId },
-          { expenses: { paid_by: userId } },
-        ],
+        OR: [{ user_id: userId }, { expenses: { paid_by: userId } }],
       },
       include: {
         expenses: {
-          select: { paid_by: true },
+          select: { paid_by: true, expense_date: true },
         },
       },
     });
 
+    return splits.filter((split) => getSignedOutstanding(split, userId) !== 0);
+  }
+
+  async getBalances(userId: string) {
+    const splits = await this.loadUnsettledSplits(userId);
     return this.aggregateBalances(userId, splits);
   }
 
